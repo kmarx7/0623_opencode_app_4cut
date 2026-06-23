@@ -507,6 +507,12 @@ body {
   color: var(--text-muted);
 }
 
+.error-detail {
+  font-size: 12px;
+  word-break: break-all;
+  max-width: 100%;
+}
+
 /* Result Screen */
 .photo-strip {
   width: 100%;

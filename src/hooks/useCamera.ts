@@ -11,15 +11,33 @@ export function useCamera() {
   const startCamera = useCallback(async () => {
     setStatus('requesting')
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } },
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1080 },
+          height: { ideal: 1440 },
+        },
         audio: false,
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
       }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      streamRef.current = stream
+
+      const video = videoRef.current
+      if (!video) throw new Error('Video element not found')
+
+      video.srcObject = stream
+
+      await video.play()
+
+      await new Promise<void>((resolve) => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          resolve()
+          return
+        }
+        video.onloadedmetadata = () => resolve()
+      })
+
       setStatus('ready')
     } catch (err) {
       const msg = err instanceof Error ? err.message : '카메라를 사용할 수 없습니다'
@@ -39,18 +57,35 @@ export function useCamera() {
     setStatus('idle')
   }, [])
 
-  const capturePhoto = useCallback((width = 1080, height = 1440): string | null => {
+  const capturePhoto = useCallback((): string | null => {
     const video = videoRef.current
-    if (!video) return null
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) return null
 
+    const vw = video.videoWidth
+    const vh = video.videoHeight
+
+    const outW = 1080
+    const outH = 1440
     const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
+    canvas.width = outW
+    canvas.height = outH
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
-    ctx.drawImage(video, 0, 0, width, height)
-    return canvas.toDataURL('image/jpeg', 0.95)
+    const srcAspect = vw / vh
+    const dstAspect = outW / outH
+
+    let sx = 0, sy = 0, sw = vw, sh = vh
+    if (srcAspect > dstAspect) {
+      sw = vh * dstAspect
+      sx = (vw - sw) / 2
+    } else {
+      sh = vw / dstAspect
+      sy = (vh - sh) / 2
+    }
+
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH)
+    return canvas.toDataURL('image/jpeg', 0.92)
   }, [])
 
   return { videoRef, status, errorMessage, startCamera, stopCamera, capturePhoto }

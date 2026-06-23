@@ -8,16 +8,37 @@ import './App.css'
 type Phase = 'intro' | 'camera' | 'countdown' | 'result'
 
 export default function App() {
-  const { videoRef, status, startCamera, stopCamera, capturePhoto } = useCamera()
+  const { videoRef, status, errorMessage, startCamera, stopCamera, capturePhoto } = useCamera()
   const [phase, setPhase] = useState<Phase>('intro')
   const [photos, setPhotos] = useState<string[]>([])
   const [countdown, setCountdown] = useState(3)
   const [shotIndex, setShotIndex] = useState(0)
   const [flash, setFlash] = useState(false)
   const [themeId, setThemeId] = useState('original')
+  const [cameraReady, setCameraReady] = useState(false)
 
   const timerRef = useRef<number>(undefined)
   const captureCountRef = useRef(0)
+
+  useEffect(() => {
+    if (status !== 'ready') {
+      setCameraReady(false)
+      return
+    }
+    const check = () => {
+      const v = videoRef.current
+      if (v && v.videoWidth > 0 && v.videoHeight > 0) {
+        setCameraReady(true)
+      } else {
+        const id = requestAnimationFrame(check)
+        timerRef.current = id as unknown as number
+      }
+    }
+    check()
+    return () => {
+      if (timerRef.current) cancelAnimationFrame(timerRef.current as unknown as number)
+    }
+  }, [status, videoRef])
 
   const showFlash = useCallback(() => {
     setFlash(true)
@@ -38,7 +59,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (phase !== 'countdown' || status !== 'ready') return
+    if (phase !== 'countdown' || !cameraReady) return
 
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(c => c - 1), 1000)
@@ -67,7 +88,7 @@ export default function App() {
     }
 
     return () => clearTimeout(timerRef.current)
-  }, [phase, countdown, status, showFlash, capturePhoto, stopCamera])
+  }, [phase, countdown, cameraReady, showFlash, capturePhoto, stopCamera])
 
   const handleRetake = useCallback(() => {
     setPhotos([])
@@ -81,7 +102,6 @@ export default function App() {
     return (
       <div className="app intro">
         <div className="polaroid-camera">
-          {/* top flash / viewfinder section */}
           <div className="camera-top">
             <div className="viewfinder">
               <div className="viewfinder-lens" />
@@ -91,11 +111,9 @@ export default function App() {
             </div>
           </div>
 
-          {/* main body */}
           <div className="camera-body-main">
             <div className="rainbow-stripe" />
             <div className="body-content">
-              {/* large lens */}
               <div className="main-lens">
                 <div className="lens-outer">
                   <div className="lens-mid">
@@ -106,13 +124,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* brand */}
               <div className="camera-brand">
                 <h1>LIFE 4 CUTS</h1>
                 <p className="subtitle">찰칵! 인생의 한 순간을 남겨보세요</p>
               </div>
 
-              {/* shutter button area */}
               <button className="shutter-btn" onClick={startCapture}>
                 <div className="shutter-red" />
                 <span>시작하기</span>
@@ -120,7 +136,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* bottom film area */}
           <div className="camera-bottom">
             <div className="film-slot" />
             <div className="film-label">POLAROID</div>
@@ -151,8 +166,8 @@ export default function App() {
 
         {phase === 'camera' && (
           <div className="camera-controls">
-            <button className="btn btn-primary btn-capture" onClick={beginAutoCapture} disabled={status !== 'ready'}>
-              📸 촬영 시작
+            <button className="btn btn-primary btn-capture" onClick={beginAutoCapture} disabled={!cameraReady}>
+              {cameraReady ? '📸 촬영 시작' : '⏳ 카메라 준비 중...'}
             </button>
           </div>
         )}
@@ -163,6 +178,7 @@ export default function App() {
         {status === 'error' && (
           <div className="camera-error">
             <p>⚠️ 카메라를 사용할 수 없습니다</p>
+            <p className="error-detail">{errorMessage}</p>
             <button className="btn btn-secondary" onClick={startCamera}>
               다시 시도
             </button>
