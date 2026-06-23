@@ -29,35 +29,52 @@ export const themes: PhotoTheme[] = [
     id: 'original',
     name: '오리지널',
     slotBg: '#ffffff',
-    slotBorderColor: '#e0e0e0',
+    slotBorderColor: 'rgba(0,0,0,0.08)',
     slotBorderWidth: 1,
-    slotRadius: 6,
-    showCorners: true,
+    slotRadius: 8,
+    showCorners: false,
     renderBackground(ctx, w, h) {
-      ctx.fillStyle = '#f8f8f8'
+      ctx.fillStyle = '#f5f5f5'
       ctx.fillRect(0, 0, w, h)
+
+      ctx.save()
+      ctx.shadowColor = 'rgba(0,0,0,0.06)'
+      ctx.shadowBlur = 10
+      ctx.shadowOffsetY = 2
       ctx.fillStyle = '#ffffff'
-      roundRect(ctx, 20, 20, w - 40, h - 40, 12)
+      roundRect(ctx, 14, 14, w - 28, h - 28, 16)
       ctx.fill()
-      ctx.strokeStyle = '#eee'
-      ctx.lineWidth = 1
-      roundRect(ctx, 20, 20, w - 40, h - 40, 12)
-      ctx.stroke()
+      ctx.restore()
+
+      ctx.fillStyle = '#fafafa'
+      roundRect(ctx, 16, 16, w - 32, h - 32, 15)
+      ctx.fill()
     },
     renderForeground(ctx, w, h) {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.font = '700 22px "Playfair Display", serif'
+      ctx.fillStyle = '#2c2c2c'
+      ctx.font = '600 20px "Playfair Display", serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText('LIFE 4 CUTS', w / 2, h - 58)
-      ctx.fillStyle = '#999'
-      ctx.font = '11px "Inter", sans-serif'
-      ctx.fillText('@ life4cuts', w / 2, h - 30)
-      const now = new Date()
+      ctx.fillText('LIFE 4 CUTS', w / 2, h - 56)
+
+      ctx.fillStyle = '#aaa'
+      ctx.font = '10px "Inter", sans-serif'
+      ctx.fillText('@ life4cuts', w / 2, h - 32)
+
       ctx.fillStyle = '#ccc'
-      ctx.font = '10px "Courier New", monospace'
+      ctx.font = '9px "Courier New", monospace'
       ctx.textAlign = 'left'
-      ctx.fillText(`${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`, 36, h - 14)
+      const now = new Date()
+      ctx.fillText(
+        `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`,
+        36, h - 12
+      )
+
+      ctx.textAlign = 'right'
+      ctx.fillText('#life4cuts', w - 36, h - 12)
+
+      ctx.fillStyle = '#eee'
+      ctx.fillRect(36, h - 92, w - 72, 1)
     },
   },
   {
