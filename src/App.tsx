@@ -80,22 +80,50 @@ export default function App() {
   if (phase === 'intro') {
     return (
       <div className="app intro">
-        <div className="polaroid-body">
-          <div className="rainbow-stripe" />
-          <div className="polaroid-content">
-            <div className="logo-section">
-              <div className="logo-icon">
-                <div className="lens-icon" />
-              </div>
-              <h1>LIFE 4 CUTS</h1>
-              <p className="subtitle">찰칵! 인생의 한 순간을 남겨보세요</p>
+        <div className="polaroid-camera">
+          {/* top flash / viewfinder section */}
+          <div className="camera-top">
+            <div className="viewfinder">
+              <div className="viewfinder-lens" />
             </div>
-            <button className="btn-start" onClick={startCapture}>
-              <span className="btn-inner">
-                <span className="btn-dot" />
-                시작하기
-              </span>
-            </button>
+            <div className="flash-unit">
+              <div className="flash-bulb" />
+            </div>
+          </div>
+
+          {/* main body */}
+          <div className="camera-body-main">
+            <div className="rainbow-stripe" />
+            <div className="body-content">
+              {/* large lens */}
+              <div className="main-lens">
+                <div className="lens-outer">
+                  <div className="lens-mid">
+                    <div className="lens-inner">
+                      <div className="lens-glass" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* brand */}
+              <div className="camera-brand">
+                <h1>LIFE 4 CUTS</h1>
+                <p className="subtitle">찰칵! 인생의 한 순간을 남겨보세요</p>
+              </div>
+
+              {/* shutter button area */}
+              <button className="shutter-btn" onClick={startCapture}>
+                <div className="shutter-red" />
+                <span>시작하기</span>
+              </button>
+            </div>
+          </div>
+
+          {/* bottom film area */}
+          <div className="camera-bottom">
+            <div className="film-slot" />
+            <div className="film-label">POLAROID</div>
           </div>
         </div>
       </div>

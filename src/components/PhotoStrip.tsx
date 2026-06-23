@@ -24,77 +24,105 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    canvas.width = CANVAS_WIDTH
-    canvas.height = CANVAS_HEIGHT
+    let cancelled = false
 
-    const t = theme
-    const { margin, spacing, bgColor, photoBorderRadius, photoBorderColor, photoBorderWidth, photoShadow } = t
-    const logoArea = LOGO_HEIGHT + 24
+    async function render() {
+      const c = canvas
+      const cx = ctx
+      if (!c || !cx) return
 
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      c.width = CANVAS_WIDTH
+      c.height = CANVAS_HEIGHT
 
-    if (t.renderDecorations) {
-      t.renderDecorations(ctx, CANVAS_WIDTH, CANVAS_HEIGHT)
+      const t = theme
+      const { margin, spacing, bgColor, photoBorderRadius, photoBorderColor, photoBorderWidth, photoShadow } = t
+      const logoArea = LOGO_HEIGHT + 24
+
+      cx.fillStyle = bgColor
+      cx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+
+      if (t.renderDecorations) {
+        t.renderDecorations(cx, CANVAS_WIDTH, CANVAS_HEIGHT)
+      }
+
+      const photoArea = CANVAS_HEIGHT - margin * 2 - logoArea
+      const photoHeight = (photoArea - spacing * 3) / 4
+      const photoWidth = CANVAS_WIDTH - margin * 2
+
+      const loadImage = (src: string): Promise<HTMLImageElement> =>
+        new Promise((resolve, reject) => {
+          const img = new Image()
+          img.onload = () => resolve(img)
+          img.onerror = reject
+          img.src = src
+        })
+
+      try {
+        for (let i = 0; i < photos.length; i++) {
+          if (cancelled) return
+          const img = await loadImage(photos[i])
+
+          const sx = (img.width - img.height * (photoWidth / photoHeight)) / 2
+          const sy = 0
+          const sWidth = img.height * (photoWidth / photoHeight)
+          const sHeight = img.height
+
+          const y = margin + i * (photoHeight + spacing)
+
+          cx.save()
+          cx.beginPath()
+          cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
+          cx.clip()
+          cx.drawImage(img, sx, sy, sWidth, sHeight, margin, y, photoWidth, photoHeight)
+          cx.restore()
+
+          if (photoBorderWidth > 0) {
+            cx.strokeStyle = photoBorderColor
+            cx.lineWidth = photoBorderWidth
+            cx.beginPath()
+            cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
+            cx.stroke()
+          }
+
+          if (photoShadow) {
+            cx.save()
+            cx.shadowColor = 'rgba(0,0,0,0.12)'
+            cx.shadowBlur = 12
+            cx.shadowOffsetY = 4
+            cx.strokeStyle = 'transparent'
+            cx.beginPath()
+            cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
+            cx.stroke()
+            cx.restore()
+          }
+        }
+
+        if (cancelled) return
+
+        const logoY = CANVAS_HEIGHT - margin - 10
+        cx.fillStyle = t.logoColor
+        cx.font = t.logoFont
+        cx.textAlign = 'center'
+        cx.textBaseline = 'middle'
+        cx.fillText(t.logoText, CANVAS_WIDTH / 2, logoY)
+
+        cx.fillStyle = t.subColor
+        cx.font = '11px "Inter", sans-serif'
+        cx.textBaseline = 'middle'
+        cx.fillText('@ life4cuts', CANVAS_WIDTH / 2, logoY + 30)
+
+        if (t.renderExtra) {
+          t.renderExtra(cx, CANVAS_WIDTH, CANVAS_HEIGHT)
+        }
+      } catch {
+        // image load failed
+      }
     }
 
-    const photoArea = CANVAS_HEIGHT - margin * 2 - logoArea
-    const photoHeight = (photoArea - spacing * 3) / 4
-    const photoWidth = CANVAS_WIDTH - margin * 2
+    render()
 
-    photos.forEach((photo, i) => {
-      const y = margin + i * (photoHeight + spacing)
-      const img = new Image()
-      img.src = photo
-
-      const sx = (img.width - img.height * (photoWidth / photoHeight)) / 2
-      const sy = 0
-      const sWidth = img.height * (photoWidth / photoHeight)
-      const sHeight = img.height
-
-      ctx.save()
-
-      ctx.beginPath()
-      ctx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-      ctx.clip()
-      ctx.drawImage(img, sx, sy, sWidth, sHeight, margin, y, photoWidth, photoHeight)
-      ctx.restore()
-
-      if (photoBorderWidth > 0) {
-        ctx.strokeStyle = photoBorderColor
-        ctx.lineWidth = photoBorderWidth
-        ctx.beginPath()
-        ctx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-        ctx.stroke()
-      }
-
-      if (photoShadow) {
-        ctx.save()
-        ctx.shadowColor = 'rgba(0,0,0,0.12)'
-        ctx.shadowBlur = 12
-        ctx.shadowOffsetY = 4
-        ctx.strokeStyle = 'transparent'
-        ctx.beginPath()
-        ctx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-        ctx.stroke()
-        ctx.restore()
-      }
-    })
-
-    const logoY = CANVAS_HEIGHT - margin - 10
-    ctx.fillStyle = t.logoColor
-    ctx.font = t.logoFont
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(t.logoText, CANVAS_WIDTH / 2, logoY)
-
-    ctx.fillStyle = t.subColor
-    ctx.font = '11px "Inter", sans-serif'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('@ life4cuts', CANVAS_WIDTH / 2, logoY + 30)
-
-    if (t.renderExtra) {
-      t.renderExtra(ctx, CANVAS_WIDTH, CANVAS_HEIGHT)
+    return () => {
+      cancelled = true
     }
   }, [photos, theme])
 
