@@ -9,127 +9,138 @@ interface PhotoStripProps {
   onThemeChange?: (id: string) => void
 }
 
-const CANVAS_WIDTH = 1080
-const CANVAS_HEIGHT = 1920
-const LOGO_HEIGHT = 100
+const W = 1080
+const H = 1920
+const BANNER = 100
+const SLOT_GAP = 14
+const SLOT_MARGIN_X = 40
+const SLOT_MARGIN_TOP = 26
+const CORNER_SIZE = 18
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
+
+function drawCorner(ctx: CanvasRenderingContext2D, x: number, y: number, flipX: boolean, flipY: boolean) {
+  ctx.save()
+  ctx.translate(x, y)
+  if (flipX) ctx.scale(-1, 1)
+  if (flipY) ctx.scale(1, -1)
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(0, CORNER_SIZE)
+  ctx.lineTo(CORNER_SIZE, 0)
+  ctx.closePath()
+  ctx.fillStyle = '#ffffff'
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+  ctx.restore()
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+function centerCrop(img: HTMLImageElement, tw: number, th: number) {
+  const srcAspect = img.width / img.height
+  const dstAspect = tw / th
+  let sx = 0, sy = 0, sw = img.width, sh = img.height
+  if (srcAspect > dstAspect) {
+    sw = img.height * dstAspect
+    sx = (img.width - sw) / 2
+  } else {
+    sh = img.width / dstAspect
+    sy = (img.height - sh) / 2
+  }
+  return { sx, sy, sw, sh }
+}
 
 export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake, onThemeChange }: PhotoStripProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const theme = themes.find(t => t.id === themeId) ?? themes[0]
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas || photos.length !== 4) return
+    const c = canvasRef.current
+    if (!c || photos.length !== 4) return
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const cx = c.getContext('2d')
+    if (!cx) return
 
     let cancelled = false
 
     async function render() {
-      const c = canvas
-      const cx = ctx
-      if (!c || !cx) return
-
-      c.width = CANVAS_WIDTH
-      c.height = CANVAS_HEIGHT
+      const cc = c!
+      const ccx = cx!
+      cc.width = W
+      cc.height = H
 
       const t = theme
-      const { margin, spacing, bgColor, photoBorderRadius, photoBorderColor, photoBorderWidth, photoShadow } = t
-      const logoArea = LOGO_HEIGHT + 24
+      const photoArea = H - SLOT_MARGIN_TOP - BANNER
+      const ph = (photoArea - SLOT_GAP * 3) / 4
+      const pw = W - SLOT_MARGIN_X * 2
 
-      cx.fillStyle = bgColor
-      cx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-
-      if (t.renderDecorations) {
-        t.renderDecorations(cx, CANVAS_WIDTH, CANVAS_HEIGHT)
-      }
-
-      const photoArea = CANVAS_HEIGHT - margin * 2 - logoArea
-      const photoHeight = (photoArea - spacing * 3) / 4
-      const photoWidth = CANVAS_WIDTH - margin * 2
-
-      const loadImage = (src: string): Promise<HTMLImageElement> =>
-        new Promise((resolve, reject) => {
-          const img = new Image()
-          img.onload = () => resolve(img)
-          img.onerror = reject
-          img.src = src
-        })
+      t.renderBackground(ccx, W, H)
 
       try {
-        for (let i = 0; i < photos.length; i++) {
+        for (let i = 0; i < 4; i++) {
           if (cancelled) return
           const img = await loadImage(photos[i])
+          const y = SLOT_MARGIN_TOP + i * (ph + SLOT_GAP)
+          const { sx, sy, sw, sh } = centerCrop(img, pw, ph)
 
-          const sx = (img.width - img.height * (photoWidth / photoHeight)) / 2
-          const sy = 0
-          const sWidth = img.height * (photoWidth / photoHeight)
-          const sHeight = img.height
+          ccx.save()
+          roundRect(ccx, SLOT_MARGIN_X, y, pw, ph, t.slotRadius)
+          ccx.clip()
+          ccx.drawImage(img, sx, sy, sw, sh, SLOT_MARGIN_X, y, pw, ph)
+          ccx.restore()
 
-          const y = margin + i * (photoHeight + spacing)
-
-          cx.save()
-          cx.beginPath()
-          cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-          cx.clip()
-          cx.drawImage(img, sx, sy, sWidth, sHeight, margin, y, photoWidth, photoHeight)
-          cx.restore()
-
-          if (photoBorderWidth > 0) {
-            cx.strokeStyle = photoBorderColor
-            cx.lineWidth = photoBorderWidth
-            cx.beginPath()
-            cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-            cx.stroke()
+          if (t.slotBorderWidth > 0) {
+            ccx.strokeStyle = t.slotBorderColor
+            ccx.lineWidth = t.slotBorderWidth
+            roundRect(ccx, SLOT_MARGIN_X, y, pw, ph, t.slotRadius)
+            ccx.stroke()
           }
 
-          if (photoShadow) {
-            cx.save()
-            cx.shadowColor = 'rgba(0,0,0,0.12)'
-            cx.shadowBlur = 12
-            cx.shadowOffsetY = 4
-            cx.strokeStyle = 'transparent'
-            cx.beginPath()
-            cx.roundRect(margin, y, photoWidth, photoHeight, photoBorderRadius)
-            cx.stroke()
-            cx.restore()
+          if (t.showCorners) {
+            drawCorner(ccx, SLOT_MARGIN_X, y, false, false)
+            drawCorner(ccx, SLOT_MARGIN_X + pw, y, true, false)
+            drawCorner(ccx, SLOT_MARGIN_X, y + ph, false, true)
+            drawCorner(ccx, SLOT_MARGIN_X + pw, y + ph, true, true)
           }
         }
 
-        if (cancelled) return
-
-        const logoY = CANVAS_HEIGHT - margin - 10
-        cx.fillStyle = t.logoColor
-        cx.font = t.logoFont
-        cx.textAlign = 'center'
-        cx.textBaseline = 'middle'
-        cx.fillText(t.logoText, CANVAS_WIDTH / 2, logoY)
-
-        cx.fillStyle = t.subColor
-        cx.font = '11px "Inter", sans-serif'
-        cx.textBaseline = 'middle'
-        cx.fillText('@ life4cuts', CANVAS_WIDTH / 2, logoY + 30)
-
-        if (t.renderExtra) {
-          t.renderExtra(cx, CANVAS_WIDTH, CANVAS_HEIGHT)
+        if (!cancelled) {
+          t.renderForeground(ccx, W, H)
         }
       } catch {
-        // image load failed
+        // skip failed frame
       }
     }
 
     render()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [photos, theme])
 
   const handleDownload = () => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     const link = document.createElement('a')
     link.download = `life4cuts_${theme.id}.png`
     link.href = canvas.toDataURL('image/png')
@@ -150,7 +161,7 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
               onClick={() => onThemeChange?.(t.id)}
               title={t.name}
             >
-              <span className="theme-swatch" style={{ background: t.bgColor }} />
+              <span className="theme-swatch" style={{ background: t.slotBorderColor }} />
               {t.name}
             </button>
           ))}

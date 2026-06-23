@@ -1,372 +1,392 @@
 export interface PhotoTheme {
   id: string
   name: string
-  bgColor: string
-  photoBorderRadius: number
-  photoBorderColor: string
-  photoBorderWidth: number
-  photoShadow: boolean
-  logoText: string
-  logoColor: string
-  logoFont: string
-  subColor: string
-  spacing: number
-  margin: number
-  renderDecorations?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
-  renderExtra?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
+  slotBg: string
+  slotBorderColor: string
+  slotBorderWidth: number
+  slotRadius: number
+  showCorners: boolean
+  renderBackground: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
+  renderForeground: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
 }
 
 export const themes: PhotoTheme[] = [
   {
     id: 'original',
     name: '오리지널',
-    bgColor: '#ffffff',
-    photoBorderRadius: 20,
-    photoBorderColor: '#ffffff',
-    photoBorderWidth: 4,
-    photoShadow: true,
-    logoText: 'LIFE 4 CUTS',
-    logoColor: '#2c2c2c',
-    logoFont: '600 28px "Playfair Display", serif',
-    subColor: '#999999',
-    spacing: 16,
-    margin: 48,
+    slotBg: '#ffffff',
+    slotBorderColor: '#e0e0e0',
+    slotBorderWidth: 1,
+    slotRadius: 6,
+    showCorners: true,
+    renderBackground(ctx, w, h) {
+      ctx.fillStyle = '#f8f8f8'
+      ctx.fillRect(0, 0, w, h)
+      ctx.fillStyle = '#ffffff'
+      roundRect(ctx, 20, 20, w - 40, h - 40, 12)
+      ctx.fill()
+      ctx.strokeStyle = '#eee'
+      ctx.lineWidth = 1
+      roundRect(ctx, 20, 20, w - 40, h - 40, 12)
+      ctx.stroke()
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#1a1a1a'
+      ctx.font = '700 22px "Playfair Display", serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('LIFE 4 CUTS', w / 2, h - 58)
+      ctx.fillStyle = '#999'
+      ctx.font = '11px "Inter", sans-serif'
+      ctx.fillText('@ life4cuts', w / 2, h - 30)
+      const now = new Date()
+      ctx.fillStyle = '#ccc'
+      ctx.font = '10px "Courier New", monospace'
+      ctx.textAlign = 'left'
+      ctx.fillText(`${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`, 36, h - 14)
+    },
   },
   {
-    id: 'retro',
-    name: '레트로 필름',
-    bgColor: '#3a2a1a',
-    photoBorderRadius: 0,
-    photoBorderColor: '#e8d5a3',
-    photoBorderWidth: 6,
-    photoShadow: false,
-    logoText: 'RETRO FILM',
-    logoColor: '#e8d5a3',
-    logoFont: '400 26px "Courier New", monospace',
-    subColor: '#b8a57a',
-    spacing: 20,
-    margin: 64,
-    renderDecorations(ctx, w, h) {
-      ctx.fillStyle = '#e8d5a3'
-      for (let y = 0; y < h; y += 20) {
+    id: 'film',
+    name: '필름',
+    slotBg: '#1a120a',
+    slotBorderColor: '#d4b87a',
+    slotBorderWidth: 2,
+    slotRadius: 2,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      ctx.fillStyle = '#2a1f14'
+      ctx.fillRect(0, 0, w, h)
+      for (let y = 0; y < h; y += 18) {
+        ctx.fillStyle = '#3d2e1e'
         ctx.beginPath()
-        ctx.arc(24, y + 6, 4, 0, Math.PI * 2)
-        ctx.arc(w - 24, y + 6, 4, 0, Math.PI * 2)
+        ctx.arc(28, y + 5, 5, 0, Math.PI * 2)
+        ctx.arc(w - 28, y + 5, 5, 0, Math.PI * 2)
         ctx.fill()
       }
-      ctx.fillStyle = 'rgba(0,0,0,0.25)'
-      ctx.fillRect(0, 0, w, 30)
-      ctx.fillRect(0, h - 60, w, 60)
-    },
-    renderExtra(ctx, w, h) {
-      ctx.fillStyle = '#e8d5a3'
-      ctx.font = '10px "Courier New", monospace'
+      ctx.fillStyle = '#1a120a'
+      ctx.fillRect(0, 0, w, 24)
+      ctx.fillRect(0, h - 50, w, 50)
+      ctx.fillStyle = '#6a5a3a'
+      ctx.font = '400 14px "Courier New", monospace'
       ctx.textAlign = 'center'
-      ctx.fillText('---  4  ---', w / 2, 20)
-      ctx.fillText('---  exposures  ---', w / 2, h - 20)
+      ctx.textBaseline = 'middle'
+      ctx.fillText('──  exposures  ──', w / 2, 13)
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#d4b87a'
+      ctx.font = '400 20px "Courier New", monospace'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('FILM 4', w / 2, h - 22)
     },
   },
   {
-    id: 'modern',
-    name: '모던 블랙',
-    bgColor: '#1a1a1a',
-    photoBorderRadius: 8,
-    photoBorderColor: '#ffffff',
-    photoBorderWidth: 2,
-    photoShadow: false,
-    logoText: 'L4C',
-    logoColor: '#ffffff',
-    logoFont: '300 48px "Inter", sans-serif',
-    subColor: '#666666',
-    spacing: 12,
-    margin: 36,
+    id: 'heart',
+    name: '하트',
+    slotBg: '#ffffff',
+    slotBorderColor: '#ffb6c1',
+    slotBorderWidth: 2,
+    slotRadius: 10,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      const grad = ctx.createLinearGradient(0, 0, 0, h)
+      grad.addColorStop(0, '#fff0f5')
+      grad.addColorStop(1, '#ffe0ec')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, w, h)
+      ctx.strokeStyle = '#ffb6c1'
+      ctx.lineWidth = 3
+      ctx.setLineDash([8, 6])
+      roundRect(ctx, 18, 18, w - 36, h - 36, 20)
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.strokeStyle = '#ffc0cb'
+      ctx.lineWidth = 1
+      roundRect(ctx, 24, 24, w - 48, h - 48, 16)
+      ctx.stroke()
+      const drawHeart = (cx: number, cy: number, s: number, color: string) => {
+        ctx.save(); ctx.fillStyle = color; ctx.globalAlpha = 0.2
+        ctx.beginPath()
+        ctx.moveTo(cx, cy + s * 0.3)
+        ctx.bezierCurveTo(cx - s * 0.5, cy - s * 0.3, cx - s, cy + s * 0.3, cx, cy + s)
+        ctx.bezierCurveTo(cx + s, cy + s * 0.3, cx + s * 0.5, cy - s * 0.3, cx, cy + s * 0.3)
+        ctx.fill(); ctx.restore()
+      }
+      drawHeart(60, 60, 28, '#ff8fab')
+      drawHeart(w - 60, 60, 28, '#ff8fab')
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#d6336c'
+      ctx.font = '600 22px "Playfair Display", serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('Sweet Cut ♡', w / 2, h - 48)
+      ctx.font = '11px "Playfair Display", serif'
+      ctx.fillText('♡ love yourself ♡', w / 2, h - 22)
+    },
+  },
+  {
+    id: 'starlight',
+    name: '별빛',
+    slotBg: 'rgba(255,255,255,0.06)',
+    slotBorderColor: 'rgba(255,215,0,0.35)',
+    slotBorderWidth: 1,
+    slotRadius: 8,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      const grad = ctx.createLinearGradient(0, 0, 0, h)
+      grad.addColorStop(0, '#0d0d2b')
+      grad.addColorStop(1, '#1a1a3e')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, w, h)
+      const stars: [number, number, number][] = [
+        [50, 40, 2], [120, 80, 1], [w - 60, 50, 1.5], [w - 100, 100, 1],
+        [80, h - 80, 1.5], [w - 80, h - 60, 2], [w / 2, 30, 1], [40, h - 40, 1],
+        [w - 40, h / 2, 1.5], [w / 2, h - 100, 1],
+      ]
+      stars.forEach(([sx, sy, size]) => {
+        ctx.save(); ctx.fillStyle = '#ffd700'; ctx.globalAlpha = 0.3
+        ctx.beginPath()
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2
+          const r = i % 2 === 0 ? size : size * 0.4
+          const px = sx + r * Math.cos(angle)
+          const py = sy + r * Math.sin(angle)
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+        }
+        ctx.closePath(); ctx.fill(); ctx.restore()
+      })
+      ctx.strokeStyle = '#ffd700'
+      ctx.lineWidth = 2
+      roundRect(ctx, 16, 16, w - 32, h - 32, 16)
+      ctx.stroke()
+      ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)'
+      ctx.lineWidth = 1
+      roundRect(ctx, 22, 22, w - 44, h - 44, 12)
+      ctx.stroke()
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#ffd700'
+      ctx.font = '600 24px "Playfair Display", serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('STARLIGHT', w / 2, h - 46)
+      ctx.font = '11px "Inter", sans-serif'
+      ctx.fillStyle = '#b8a040'
+      ctx.fillText('★  shine bright  ★', w / 2, h - 20)
+    },
   },
   {
     id: 'neon',
-    name: '네온 팝',
-    bgColor: '#0d0d1a',
-    photoBorderRadius: 16,
-    photoBorderColor: '#ff2d78',
-    photoBorderWidth: 4,
-    photoShadow: false,
-    logoText: 'NEON',
-    logoColor: '#ff2d78',
-    logoFont: '800 36px "Inter", sans-serif',
-    subColor: '#00d4ff',
-    spacing: 14,
-    margin: 44,
-    renderDecorations(ctx, w, h) {
-      ctx.save()
-      ctx.shadowColor = '#ff2d78'
-      ctx.shadowBlur = 20
-      ctx.fillStyle = '#ff2d78'
-      ctx.font = 'bold 14px "Inter", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('✦  POP  ✦', w / 2, h - 56)
-      ctx.restore()
-
-      ctx.save()
-      ctx.shadowColor = '#00d4ff'
-      ctx.shadowBlur = 15
-      ctx.strokeStyle = '#00d4ff'
-      ctx.lineWidth = 2
-      ctx.strokeRect(16, 16, w - 32, h - 32)
-      ctx.restore()
-    },
-  },
-  {
-    id: 'sweet',
-    name: '스위트',
-    bgColor: '#fff0f5',
-    photoBorderRadius: 28,
-    photoBorderColor: '#ffb6c1',
-    photoBorderWidth: 6,
-    photoShadow: false,
-    logoText: 'Sweet Cut ♡',
-    logoColor: '#d6336c',
-    logoFont: '600 28px "Playfair Display", serif',
-    subColor: '#ff8fab',
-    spacing: 18,
-    margin: 50,
-    renderDecorations(ctx, w, h) {
-      const drawHeart = (cx: number, cy: number, size: number, color: string) => {
+    name: '네온',
+    slotBg: '#14141e',
+    slotBorderColor: '#ff2d78',
+    slotBorderWidth: 1.5,
+    slotRadius: 8,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      ctx.fillStyle = '#0a0a12'
+      ctx.fillRect(0, 0, w, h)
+      const glow = (color: string, blur: number) => {
         ctx.save()
-        ctx.fillStyle = color
-        ctx.globalAlpha = 0.3
-        ctx.beginPath()
-        ctx.moveTo(cx, cy + size * 0.3)
-        ctx.bezierCurveTo(cx - size * 0.5, cy - size * 0.3, cx - size, cy + size * 0.3, cx, cy + size)
-        ctx.bezierCurveTo(cx + size, cy + size * 0.3, cx + size * 0.5, cy - size * 0.3, cx, cy + size * 0.3)
-        ctx.fill()
-        ctx.restore()
+        ctx.shadowColor = color; ctx.shadowBlur = blur
+        ctx.strokeStyle = color; ctx.lineWidth = 3
+        roundRect(ctx, 14, 14, w - 28, h - 28, 18)
+        ctx.stroke(); ctx.restore()
       }
-
-      drawHeart(60, 60, 30, '#ffb6c1')
-      drawHeart(w - 60, 60, 30, '#ffb6c1')
-
-      ctx.fillStyle = '#ffb6c1'
-      ctx.font = '14px "Playfair Display", serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('♡  love yourself  ♡', w / 2, h - 18)
+      glow('#ff2d78', 25); glow('#ff2d78', 8)
+      glow('#00d4ff', 20)
+      ctx.strokeStyle = '#00d4ff'
+      ctx.lineWidth = 1
+      roundRect(ctx, 20, 20, w - 40, h - 40, 14)
+      ctx.stroke()
     },
-  },
-  {
-    id: 'cinema',
-    name: '시네마',
-    bgColor: '#1a0f0f',
-    photoBorderRadius: 4,
-    photoBorderColor: '#c9a84c',
-    photoBorderWidth: 4,
-    photoShadow: false,
-    logoText: 'CINEMA',
-    logoColor: '#c9a84c',
-    logoFont: '600 34px "Playfair Display", serif',
-    subColor: '#8b0000',
-    spacing: 16,
-    margin: 48,
-    renderDecorations(ctx, w, h) {
-      ctx.fillStyle = '#8b0000'
-      ctx.fillRect(0, 0, w, 8)
-      ctx.fillRect(0, h - 8, w, 8)
-
-      ctx.fillStyle = 'rgba(139, 0, 0, 0.3)'
-      ctx.fillRect(0, 0, 16, h)
-      ctx.fillRect(w - 16, 0, w, h)
-
-      for (let i = 0; i < 12; i++) {
-        const x = 20 + i * ((w - 40) / 12)
-        ctx.fillStyle = '#c9a84c'
-        ctx.fillRect(x, h - 48, 4, 20)
-      }
-
-      ctx.fillStyle = '#c9a84c'
-      ctx.font = '10px "Courier New", monospace'
-      ctx.textAlign = 'center'
-      ctx.fillText('✦  NOW SHOWING  ✦', w / 2, h - 56)
-    },
-  },
-  {
-    id: 'bohemian',
-    name: '보헤미안',
-    bgColor: '#f5e6d3',
-    photoBorderRadius: 12,
-    photoBorderColor: '#c4956a',
-    photoBorderWidth: 4,
-    photoShadow: false,
-    logoText: 'Bohemian',
-    logoColor: '#8b5e3c',
-    logoFont: '400 32px "Playfair Display", serif',
-    subColor: '#c4956a',
-    spacing: 16,
-    margin: 50,
-    renderDecorations(ctx, w, h) {
-      const colors = ['#c4956a', '#d4a574', '#e8c9a0', '#8b5e3c']
+    renderForeground(ctx, w, h) {
       ctx.save()
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 4; col++) {
-          const cx = 24 + col * ((w - 48) / 3)
-          const cy = 24 + row * ((h - 48) / 2)
-          ctx.globalAlpha = 0.15
-          ctx.fillStyle = colors[(row + col) % colors.length]
+      ctx.shadowColor = '#ff2d78'; ctx.shadowBlur = 20
+      ctx.fillStyle = '#ff2d78'
+      ctx.font = '800 28px "Inter", sans-serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText('NEON', w / 2, h - 44)
+      ctx.restore()
+      ctx.fillStyle = '#00d4ff'
+      ctx.font = '11px "Inter", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('✦  POP  ✦', w / 2, h - 18)
+    },
+  },
+  {
+    id: 'dotted',
+    name: '도트',
+    slotBg: '#f5f0e8',
+    slotBorderColor: '#d0c8b8',
+    slotBorderWidth: 1,
+    slotRadius: 4,
+    showCorners: true,
+    renderBackground(ctx, w, h) {
+      ctx.fillStyle = '#faf8f5'
+      ctx.fillRect(0, 0, w, h)
+      ctx.fillStyle = '#e8e0d0'
+      for (let x = 0; x < w; x += 12) {
+        for (let y = 0; y < h; y += 12) {
           ctx.beginPath()
-          for (let i = 0; i < 6; i++) {
-            const angle = (i * Math.PI * 2) / 6
-            const r = i % 2 === 0 ? 14 : 7
-            if (i === 0) ctx.moveTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle))
-            else ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle))
-          }
-          ctx.closePath()
+          ctx.arc(x, y, 2, 0, Math.PI * 2)
           ctx.fill()
         }
       }
-      ctx.restore()
-
-      ctx.fillStyle = '#8b5e3c'
-      ctx.font = '12px "Playfair Display", serif'
+      ctx.fillStyle = '#ffffff'
+      roundRect(ctx, 10, 10, w - 20, h - 20, 16)
+      ctx.fill()
+      ctx.fillStyle = '#333'
+      ctx.fillRect(16, 16, w - 32, 3)
+      ctx.fillRect(16, h - 19, w - 32, 3)
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#333'
+      ctx.font = '500 18px "Inter", sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('~ free spirit ~', w / 2, h - 14)
+      ctx.textBaseline = 'middle'
+      ctx.fillText('DOTTED', w / 2, h - 36)
+      ctx.fillStyle = '#888'
+      ctx.font = '10px "Inter", sans-serif'
+      ctx.fillText('···  vintage  ···', w / 2, h - 14)
     },
   },
   {
-    id: 'ocean',
-    name: '오션',
-    bgColor: '#e8f4f8',
-    photoBorderRadius: 16,
-    photoBorderColor: '#4a90d9',
-    photoBorderWidth: 4,
-    photoShadow: false,
-    logoText: 'OCEAN',
-    logoColor: '#1a5276',
-    logoFont: '300 36px "Inter", sans-serif',
-    subColor: '#4a90d9',
-    spacing: 14,
-    margin: 46,
-    renderDecorations(ctx, w, h) {
-      const drawWave = (y: number, color: string, alpha: number) => {
-        ctx.save()
-        ctx.globalAlpha = alpha
-        ctx.fillStyle = color
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        for (let x = 0; x <= w; x += 20) {
-          ctx.lineTo(x, y + Math.sin((x / w) * Math.PI * 4) * 6)
-        }
-        ctx.lineTo(w, h)
-        ctx.lineTo(0, h)
-        ctx.closePath()
-        ctx.fill()
-        ctx.restore()
-      }
-
-      drawWave(h - 60, '#4a90d9', 0.1)
-      drawWave(h - 50, '#357abd', 0.08)
-
-      for (let i = 0; i < 8; i++) {
-        const x = 30 + i * ((w - 60) / 7)
-        ctx.save()
-        ctx.globalAlpha = 0.08
-        ctx.fillStyle = '#4a90d9'
-        ctx.beginPath()
-        ctx.arc(x, h - 30, 6, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-      }
-
-      ctx.fillStyle = '#4a90d9'
-      ctx.font = '11px "Inter", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('~ dive into the moment ~', w / 2, h - 18)
-    },
-  },
-  {
-    id: 'golden',
-    name: '골든',
-    bgColor: '#1c1410',
-    photoBorderRadius: 12,
-    photoBorderColor: '#d4af37',
-    photoBorderWidth: 5,
-    photoShadow: false,
-    logoText: 'GOLDEN',
-    logoColor: '#d4af37',
-    logoFont: '700 32px "Playfair Display", serif',
-    subColor: '#8b7536',
-    spacing: 18,
-    margin: 50,
-    renderDecorations(ctx, w, h) {
+    id: 'polaroid',
+    name: '폴라로이드',
+    slotBg: '#f5f5f5',
+    slotBorderColor: '#ddd',
+    slotBorderWidth: 1,
+    slotRadius: 3,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      ctx.fillStyle = '#f5f0e8'
+      ctx.fillRect(0, 0, w, h)
       ctx.save()
-      ctx.shadowColor = '#d4af37'
-      ctx.shadowBlur = 8
-      ctx.strokeStyle = '#d4af37'
+      ctx.shadowColor = 'rgba(0,0,0,0.08)'
+      ctx.shadowBlur = 20; ctx.shadowOffsetY = 6
+      ctx.fillStyle = '#ffffff'
+      roundRect(ctx, 14, 14, w - 28, h - 28, 20)
+      ctx.fill()
+      ctx.restore()
+      ctx.strokeStyle = '#e8e0d0'
       ctx.lineWidth = 1
-      ctx.strokeRect(12, 12, w - 24, h - 24)
-      ctx.restore()
+      roundRect(ctx, 14, 14, w - 28, h - 28, 20)
+      ctx.stroke()
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#2c2c2c'
+      ctx.font = '700 18px "Playfair Display", serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText('POLAROID', w / 2, h - 108)
+      ctx.fillStyle = '#888'
+      ctx.font = '10px "Courier New", monospace'
+      ctx.fillText('@ life4cuts', w / 2, h - 82)
 
-      for (let i = 0; i < 8; i++) {
-        const angle = (i * Math.PI * 2) / 8
-        const cx = w / 2 + Math.cos(angle) * 40
-        const cy = h - 36 + Math.sin(angle) * 0
-        ctx.save()
-        ctx.globalAlpha = 0.2
-        ctx.fillStyle = '#d4af37'
-        ctx.beginPath()
-        for (let j = 0; j < 4; j++) {
-          const a = (j * Math.PI * 2) / 4 + Math.PI / 4
-          const r = j % 2 === 0 ? 6 : 3
-          const sx = cx + (i * 25) + r * Math.cos(a)
-          const sy = cy + r * Math.sin(a)
-          if (j === 0) ctx.moveTo(sx, sy)
-          else ctx.lineTo(sx, sy)
-        }
-        ctx.closePath()
-        ctx.fill()
-        ctx.restore()
-      }
+      const now = new Date()
+      ctx.fillStyle = '#bbb'
+      ctx.font = '9px "Courier New", monospace'
+      ctx.textAlign = 'left'
+      ctx.fillText(`${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`, 36, h - 56)
+      ctx.textAlign = 'right'
+      ctx.fillText('No. 001', w - 36, h - 56)
 
-      ctx.fillStyle = '#d4af37'
-      ctx.font = '11px "Playfair Display", serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('✦  timeless  ✦', w / 2, h - 16)
+      ctx.fillStyle = '#f5f0e8'
+      ctx.fillRect(0, h - 38, w, 38)
     },
   },
   {
-    id: 'graffiti',
-    name: '그래피티',
-    bgColor: '#1a1a2e',
-    photoBorderRadius: 0,
-    photoBorderColor: '#ff6b35',
-    photoBorderWidth: 3,
-    photoShadow: false,
-    logoText: 'GRAFFITI',
-    logoColor: '#ff6b35',
-    logoFont: '900 40px "Inter", sans-serif',
-    subColor: '#e71d36',
-    spacing: 12,
-    margin: 42,
-    renderDecorations(ctx, w, h) {
-      ctx.save()
-      ctx.globalAlpha = 0.15
-      for (let i = 0; i < 15; i++) {
-        const x = Math.random() * w
-        const y = Math.random() * h
-        const colors = ['#ff6b35', '#e71d36', '#ffd700', '#00d4ff', '#7a4a9a']
-        ctx.fillStyle = colors[i % colors.length]
-        ctx.font = `${16 + Math.random() * 20}px "Inter", sans-serif`
-        ctx.fillText(['✪', '✧', '✦', '⬡', '●', '◆', '▲'][i % 7], x, y)
+    id: 'ribbon',
+    name: '리본',
+    slotBg: '#ffffff',
+    slotBorderColor: '#e1bee7',
+    slotBorderWidth: 2,
+    slotRadius: 12,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      const grad = ctx.createLinearGradient(0, 0, w, 0)
+      grad.addColorStop(0, '#fce4ec'); grad.addColorStop(0.5, '#f3e5f5'); grad.addColorStop(1, '#e8eaf6')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, w, h)
+      const drawRibbon = (cx: number, cy: number, color: string, flip: boolean) => {
+        ctx.save(); ctx.translate(cx, cy)
+        if (flip) ctx.scale(-1, 1)
+        ctx.fillStyle = color
+        ctx.beginPath(); ctx.moveTo(0, 0)
+        ctx.quadraticCurveTo(15, -10, 30, 0)
+        ctx.quadraticCurveTo(15, 10, 0, 0); ctx.fill()
+        ctx.beginPath(); ctx.moveTo(0, 0)
+        ctx.quadraticCurveTo(15, -5, 20, 20)
+        ctx.quadraticCurveTo(10, 10, 0, 0); ctx.fill()
+        ctx.restore()
       }
-      ctx.restore()
-
+      drawRibbon(50, 32, '#e91e63', false); drawRibbon(w - 50, 32, '#e91e63', true)
+      drawRibbon(50, h - 34, '#9c27b0', false); drawRibbon(w - 50, h - 34, '#9c27b0', true)
+      ctx.strokeStyle = '#ce93d8'; ctx.lineWidth = 2; ctx.setLineDash([6, 4])
+      roundRect(ctx, 18, 18, w - 36, h - 36, 16); ctx.stroke()
+      ctx.setLineDash([])
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#7b1fa2'
+      ctx.font = '600 22px "Playfair Display", serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText('Ribbon', w / 2, h - 36)
+      ctx.fillStyle = '#9c27b0'
+      ctx.font = '10px "Inter", sans-serif'
+      ctx.fillText('~  pretty  ~', w / 2, h - 14)
+    },
+  },
+  {
+    id: 'gold',
+    name: '골드',
+    slotBg: 'rgba(255,255,255,0.04)',
+    slotBorderColor: 'rgba(212,175,55,0.35)',
+    slotBorderWidth: 1,
+    slotRadius: 6,
+    showCorners: false,
+    renderBackground(ctx, w, h) {
+      const grad = ctx.createLinearGradient(0, 0, 0, h)
+      grad.addColorStop(0, '#1a1410'); grad.addColorStop(1, '#0d0a08')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, w, h)
       ctx.save()
-      ctx.globalAlpha = 0.2
-      ctx.strokeStyle = '#ff6b35'
-      ctx.lineWidth = 2
-      ctx.setLineDash([8, 8])
-      ctx.strokeRect(14, 14, w - 28, h - 28)
-      ctx.restore()
-
-      ctx.fillStyle = '#ff6b35'
-      ctx.font = 'bold 12px "Inter", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('✧  STREET  ✧', w / 2, h - 14)
+      ctx.shadowColor = '#d4af37'; ctx.shadowBlur = 10
+      ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 2
+      roundRect(ctx, 14, 14, w - 28, h - 28, 14)
+      ctx.stroke(); ctx.restore()
+      ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1
+      roundRect(ctx, 20, 20, w - 40, h - 40, 10); ctx.stroke()
+      ;[[22, 22], [w - 22, 22], [22, h - 22], [w - 22, h - 22]].forEach(([cx, cy]) => {
+        ctx.save(); ctx.translate(cx, cy)
+        ctx.fillStyle = '#d4af37'
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 16); ctx.lineTo(16, 0); ctx.closePath(); ctx.fill()
+        ctx.restore()
+      })
+    },
+    renderForeground(ctx, w, h) {
+      ctx.fillStyle = '#d4af37'
+      ctx.font = '700 24px "Playfair Display", serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText('GOLDEN', w / 2, h - 46)
+      ctx.font = '10px "Playfair Display", serif'
+      ctx.fillStyle = '#8a7536'
+      ctx.fillText('✦  timeless  ✦', w / 2, h - 20)
     },
   },
 ]
