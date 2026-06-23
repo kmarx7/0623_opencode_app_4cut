@@ -4,17 +4,15 @@ import { themes } from '../themes'
 interface PhotoStripProps {
   photos: string[]
   themeId?: string
+  layout?: '1x4' | '2x2'
   onDownload?: () => void
   onRetake?: () => void
   onThemeChange?: (id: string) => void
+  onLayoutChange?: (layout: '1x4' | '2x2') => void
 }
 
 const W = 1080
 const H = 1920
-const BANNER = 100
-const SLOT_GAP = 14
-const SLOT_MARGIN_X = 40
-const SLOT_MARGIN_TOP = 26
 const CORNER_SIZE = 18
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -72,7 +70,54 @@ function centerCrop(img: HTMLImageElement, tw: number, th: number) {
   return { sx, sy, sw, sh }
 }
 
-export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake, onThemeChange }: PhotoStripProps) {
+type SlotInfo = { x: number; y: number; w: number; h: number }
+
+function getSlots(layout: '1x4' | '2x2'): SlotInfo[] {
+  const gap = 14
+  const mx = 36
+  const my = 24
+  const banner = 110
+
+  if (layout === '1x4') {
+    const area = H - my - banner
+    const ph = (area - gap * 3) / 4
+    const pw = W - mx * 2
+    return Array.from({ length: 4 }, (_, i) => ({
+      x: mx,
+      y: my + i * (ph + gap),
+      w: pw,
+      h: ph,
+    }))
+  }
+
+  const cols = 2
+  const rows = 2
+  const area = H - my - banner
+  const ph = (area - gap * (rows - 1)) / rows
+  const pw = (W - mx * 2 - gap * (cols - 1)) / cols
+  const slots: SlotInfo[] = []
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      slots.push({
+        x: mx + c * (pw + gap),
+        y: my + r * (ph + gap),
+        w: pw,
+        h: ph,
+      })
+    }
+  }
+  return slots
+}
+
+export function PhotoStrip({
+  photos,
+  themeId = 'original',
+  layout = '1x4',
+  onDownload,
+  onRetake,
+  onThemeChange,
+  onLayoutChange,
+}: PhotoStripProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const theme = themes.find(t => t.id === themeId) ?? themes[0]
 
@@ -92,9 +137,7 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
       cc.height = H
 
       const t = theme
-      const photoArea = H - SLOT_MARGIN_TOP - BANNER
-      const ph = (photoArea - SLOT_GAP * 3) / 4
-      const pw = W - SLOT_MARGIN_X * 2
+      const slots = getSlots(layout)
 
       t.renderBackground(ccx, W, H)
 
@@ -102,27 +145,27 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
         for (let i = 0; i < 4; i++) {
           if (cancelled) return
           const img = await loadImage(photos[i])
-          const y = SLOT_MARGIN_TOP + i * (ph + SLOT_GAP)
-          const { sx, sy, sw, sh } = centerCrop(img, pw, ph)
+          const { x, y, w, h } = slots[i]
+          const { sx, sy, sw, sh } = centerCrop(img, w, h)
 
           ccx.save()
-          roundRect(ccx, SLOT_MARGIN_X, y, pw, ph, t.slotRadius)
+          roundRect(ccx, x, y, w, h, t.slotRadius)
           ccx.clip()
-          ccx.drawImage(img, sx, sy, sw, sh, SLOT_MARGIN_X, y, pw, ph)
+          ccx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
           ccx.restore()
 
           if (t.slotBorderWidth > 0) {
             ccx.strokeStyle = t.slotBorderColor
             ccx.lineWidth = t.slotBorderWidth
-            roundRect(ccx, SLOT_MARGIN_X, y, pw, ph, t.slotRadius)
+            roundRect(ccx, x, y, w, h, t.slotRadius)
             ccx.stroke()
           }
 
           if (t.showCorners) {
-            drawCorner(ccx, SLOT_MARGIN_X, y, false, false)
-            drawCorner(ccx, SLOT_MARGIN_X + pw, y, true, false)
-            drawCorner(ccx, SLOT_MARGIN_X, y + ph, false, true)
-            drawCorner(ccx, SLOT_MARGIN_X + pw, y + ph, true, true)
+            drawCorner(ccx, x, y, false, false)
+            drawCorner(ccx, x + w, y, true, false)
+            drawCorner(ccx, x, y + h, false, true)
+            drawCorner(ccx, x + w, y + h, true, true)
           }
         }
 
@@ -136,13 +179,13 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
 
     render()
     return () => { cancelled = true }
-  }, [photos, theme])
+  }, [photos, theme, layout])
 
   const handleDownload = () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const link = document.createElement('a')
-    link.download = `life4cuts_${theme.id}.png`
+    link.download = `life4cuts_${layout}_${theme.id}.png`
     link.href = canvas.toDataURL('image/png')
     link.click()
     onDownload?.()
@@ -166,6 +209,22 @@ export function PhotoStrip({ photos, themeId = 'original', onDownload, onRetake,
             </button>
           ))}
         </div>
+
+        <div className="layout-tabs">
+          <button
+            className={`layout-tab${layout === '1x4' ? ' active' : ''}`}
+            onClick={() => onLayoutChange?.('1x4')}
+          >
+            ⟐ 1×4
+          </button>
+          <button
+            className={`layout-tab${layout === '2x2' ? ' active' : ''}`}
+            onClick={() => onLayoutChange?.('2x2')}
+          >
+            ⊞ 2×2
+          </button>
+        </div>
+
         <canvas ref={canvasRef} style={{ width: '100%', maxWidth: 400, borderRadius: 12 }} />
         <div className="strip-actions">
           <button className="btn btn-primary" onClick={handleDownload}>

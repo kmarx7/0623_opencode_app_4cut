@@ -15,6 +15,7 @@ export default function App() {
   const [shotIndex, setShotIndex] = useState(0)
   const [flash, setFlash] = useState(false)
   const [themeId, setThemeId] = useState('original')
+  const [layout, setLayout] = useState<'1x4' | '2x2'>('1x4')
   const [cameraReady, setCameraReady] = useState(false)
 
   const timerRef = useRef<number>(undefined)
@@ -151,8 +152,10 @@ export default function App() {
         <PhotoStrip
           photos={photos}
           themeId={themeId}
+          layout={layout}
           onRetake={handleRetake}
           onThemeChange={setThemeId}
+          onLayoutChange={setLayout}
         />
       </div>
     )

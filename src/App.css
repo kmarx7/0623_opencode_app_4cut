@@ -593,6 +593,39 @@ body {
   border-color: rgba(255,255,255,0.3);
 }
 
+/* Layout Tabs */
+.layout-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+  justify-content: center;
+}
+
+.layout-tab {
+  flex: 1;
+  max-width: 120px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 2px solid var(--cream-dark);
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.layout-tab:hover {
+  border-color: var(--text-muted);
+}
+
+.layout-tab.active {
+  border-color: var(--text-dark);
+  background: var(--text-dark);
+  color: white;
+}
+
 /* Responsive */
 @media (max-width: 440px) {
   #root { padding: 8px; }
